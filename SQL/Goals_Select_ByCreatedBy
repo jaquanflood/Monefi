@@ -1,0 +1,70 @@
+-- =============================================
+-- Author: JaQuan Flood
+-- Create date: 01 JUL 2023 
+-- Description: SELECT By CREATED BY FROM dbo.Goals
+-- Code Reviewer: Chris Govero
+
+-- MODIFIED BY:  JaQuan Flood
+-- MODIFIED DATE: 01 JUL 2023 
+-- Code Reviewer: Chris Govero
+-- Note: 
+-- =============================================
+
+ALTER PROC [dbo].[Goals_Select_ByCreatedBy] 
+				@PageIndex int
+				,@PageSize int
+				,@IsCompleted bit
+				,@UserId int
+				
+
+AS
+/*
+
+DECLARE 
+		@PageIndex int = 0
+		,@PageSize int = 10
+		,@IsCompleted bit = 1
+		,@UserId int = 140
+
+
+	EXECUTE dbo.Goals_Select_ByCreatedBy
+		@PageIndex
+		,@PageSize
+		,@IsCompleted
+		,@UserId 
+
+		
+
+*/
+BEGIN
+
+DECLARE @offset INT = @PageIndex * @PageSize
+
+SELECT g.[Id]
+      ,g.[Name]
+      ,g.[Description]
+	  ,gt.Id AS GoalTypeId
+	  ,gt.[Name] AS GoalType
+	  ,g.TargetDate
+	  ,g.CreatedBy
+      ,g.[DateCreated]
+      ,g.[DateModified]
+	  ,g.IsCompleted
+   
+
+	  ,TotalCount = COUNT(1) OVER()
+       FROM [dbo].[Goals] AS g 
+	   INNER JOIN dbo.GoalTypes AS gt
+	   ON g.GoalTypeId = gt.Id
+
+	   INNER JOIN  dbo.Users AS u 
+	   ON g.CreatedBy = u.Id
+	   AND g.ModifiedBy = u.Id
+	   WHERE (g.CreatedBy = @UserId  AND g.IsCompleted = @IsCompleted)
+		 ORDER BY g.id DESC
+ 
+	 OFFSET @offSet Rows
+	Fetch Next @PageSize Rows ONLY
+  
+
+END
