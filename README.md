@@ -1,1 +1,1 @@
-# Monefi
+Monefi connects borrowers with multiple lenders offering a wide range of financial products using a streamlined application process and transparent loan comparisons. Monefi is an MVP and due to the proprietary nature of the code i can only provide snippets of my code. This Repository contains SQL, .NET, and React code for the Financial Goals Feature.
