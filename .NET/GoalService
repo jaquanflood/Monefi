@@ -1,0 +1,240 @@
+ public class GoalService : IGoalService
+    {
+        IDataProvider _data = null;
+
+        public GoalService(IDataProvider data)
+        {
+            _data = data;
+
+        }
+
+        public int Add(GoalAddRequest model, int userId)
+        {
+            int id = 0;
+            string procName = "[dbo].[Goals_Insert]";
+            _data.ExecuteNonQuery(procName, inputParamMapper: delegate (SqlParameterCollection col)
+            {
+                AddCommonParams(model, col);
+                col.AddWithValue("@UserId", userId);
+
+                SqlParameter idOut = new SqlParameter("@Id", SqlDbType.Int);
+                idOut.Direction = ParameterDirection.Output;
+                col.Add(idOut);
+                
+            },
+            returnParameters: delegate (SqlParameterCollection returnCollection)
+            {
+                object oId = returnCollection["@Id"].Value;
+
+                int.TryParse(oId.ToString(), out id);
+
+            });
+            return id;           
+        }
+        
+        public Goal Get(int id)
+        {
+            string procName = "[dbo].[Goals_Select_ById]";
+            Goal goal = null;
+
+            _data.ExecuteCmd(procName, delegate (SqlParameterCollection parameterCollection)
+            {
+                parameterCollection.AddWithValue("@Id", id);
+            },
+            delegate (IDataReader reader, short set)
+            {
+                int startingIndex = 0;
+                goal = MapSingleGoal(reader, ref startingIndex);
+            });
+            return goal;
+        }
+
+        public Paged<Goal> Get(int pageIndex, int pageSize)
+        {
+            Paged<Goal> pagedList = null;
+            List<Goal> list = null;
+            int totalCount = 0;
+
+            string procName = "[dbo].[Goals_SelectAll]";
+            _data.ExecuteCmd(procName,
+                inputParamMapper: delegate (SqlParameterCollection collection)
+                {
+                    collection.AddWithValue("@PageIndex", pageIndex);
+                    collection.AddWithValue("@PageSize", pageSize);
+
+                },
+                delegate (IDataReader reader, short set)
+                {
+                    int startingIndex = 0;
+                    Goal goal = MapSingleGoal(reader, ref startingIndex);
+
+                    if (totalCount == 0)
+                    {
+                        totalCount = reader.GetSafeInt32(startingIndex);
+                    }
+
+                    if (list == null)
+                    {
+                        list = new List<Goal>();
+                    }
+                    list.Add(goal);
+                });
+            if (list != null)
+            {
+                pagedList = new Paged<Goal>(list, pageIndex, pageSize, totalCount);
+            }
+            return pagedList;
+        }
+
+        public Paged<Goal> Get(int pageIndex, int pageSize, int userId, bool isCompleted)
+        {
+            Paged<Goal> pagedList = null;
+            List<Goal> list = null;
+            int totalCount = 0;
+
+            string procName = "[dbo].[Goals_Select_ByCreatedBy]";
+            _data.ExecuteCmd(procName,
+                inputParamMapper: delegate (SqlParameterCollection collection)
+                {
+                    collection.AddWithValue("@PageIndex", pageIndex);
+                    collection.AddWithValue("@PageSize", pageSize);
+                    collection.AddWithValue("@IsCompleted", isCompleted);
+                    collection.AddWithValue("@UserId", userId);
+
+
+                },
+                delegate (IDataReader reader, short set)
+                {
+                    int startingIndex = 0;
+                    Goal goal = MapSingleGoal(reader, ref startingIndex);
+
+                    if (totalCount == 0)
+                    {
+                        totalCount = reader.GetSafeInt32(startingIndex);
+                    }
+
+                    if (list == null)
+                    {
+                        list = new List<Goal>();
+                    }
+                    list.Add(goal);
+                });
+            if (list != null)
+            {
+                pagedList = new Paged<Goal>(list, pageIndex, pageSize, totalCount);
+            }
+            return pagedList;
+        }
+
+
+        public void Update(GoalUpdateRequest model, int userId)
+        {
+            string procName = "[dbo].[Goals_Update]";
+            _data.ExecuteNonQuery(procName, inputParamMapper: delegate (SqlParameterCollection col)
+            {
+                AddCommonParams(model, col);
+                col.AddWithValue("@Id", model.Id);
+                col.AddWithValue("@UserId", userId);
+
+
+            }, returnParameters: null);
+        }
+
+        public void Delete(int id)
+        {
+            string procName = "[dbo].[Goals_Delete_ById]";
+            _data.ExecuteNonQuery(procName, inputParamMapper: delegate (SqlParameterCollection collection)
+            {
+                collection.AddWithValue("@Id", id);
+
+            }, returnParameters: null);
+        }
+
+        public void UpdateIsCompleted(int id)
+        {
+            string procName = "[dbo].[Goals_Update_IsCompleted]";
+            _data.ExecuteNonQuery(procName, inputParamMapper: delegate (SqlParameterCollection collection)
+            {
+                collection.AddWithValue("@Id", id);
+
+            }, returnParameters: null);
+
+        }
+
+        public Paged<Goal> Search(int pageIndex, int pageSize, string query, bool isCompleted, int userId)
+        {
+            Paged<Goal> pagedList = null;
+            List<Goal> list = null;
+            int totalCount = 0;
+
+            string procName = "[dbo].[Goals_SearchPagination]";
+            _data.ExecuteCmd(procName,
+                inputParamMapper: delegate (SqlParameterCollection collection)
+                {
+                    collection.AddWithValue("@PageIndex", pageIndex);
+                    collection.AddWithValue("@PageSize", pageSize);
+                    collection.AddWithValue("@IsCompleted", isCompleted);
+                    collection.AddWithValue("@Query", query);
+                    collection.AddWithValue("@UserId", userId);
+
+
+                },
+                delegate (IDataReader reader, short set)
+                {
+                    int startingIndex = 0;
+                    Goal goal = MapSingleGoal(reader, ref startingIndex);
+
+                    if (totalCount == 0)
+                    {
+                        totalCount = reader.GetSafeInt32(startingIndex);
+                    }
+
+                    if (list == null)
+                    {
+                        list = new List<Goal>();
+                    }
+                    list.Add(goal);
+                });
+            if (list != null)
+            {
+                pagedList = new Paged<Goal>(list, pageIndex, pageSize, totalCount);
+            }
+            return pagedList;
+        }
+
+
+        private static void AddCommonParams(GoalAddRequest model, SqlParameterCollection col)
+        {
+            col.AddWithValue("@Name", model.Name);
+            col.AddWithValue("@Description", model.Description);
+            col.AddWithValue("@GoalTypeId", model.GoalTypeId);
+            col.AddWithValue("@TargetDate", model.TargetDate);
+            
+            
+        }
+        private Goal MapSingleGoal(IDataReader reader, ref int startingIndex)
+        {
+            Goal aGoal = new Goal();
+            
+            aGoal.GoalType = new LookUp();
+
+
+            aGoal.Id = reader.GetSafeInt32(startingIndex++);
+            aGoal.Name = reader.GetSafeString(startingIndex++);
+            aGoal.Description = reader.GetSafeString(startingIndex++);
+
+            aGoal.GoalType.Id = reader.GetSafeInt32(startingIndex++);
+            aGoal.GoalType.Name = reader.GetSafeString(startingIndex++);
+            aGoal.TargetDate = reader.GetSafeDateTime(startingIndex++);
+            aGoal.CreatedById = reader.GetSafeInt32(startingIndex++);
+            aGoal.DateCreated = reader.GetSafeDateTime(startingIndex++);
+            aGoal.DateModified = reader.GetSafeDateTime(startingIndex++);
+            aGoal.isCompleted =reader.GetSafeBool(startingIndex++);
+
+       
+
+            return aGoal;
+        }
+
+
+    }
