@@ -1,0 +1,107 @@
+import axios from "axios";
+import { API_HOST_PREFIX, onGlobalSuccess, onGlobalError } from "./serviceHelpers";
+
+const endpoint = `${API_HOST_PREFIX}/api/goals`;
+
+const add = (payload) => {
+  const config = {
+    method: "POST",
+    url: endpoint,
+    data: payload,
+    withCredentials: true,
+    crossdomain: true,
+    headers: { "Content-Type": "application/json" },
+  };
+  return axios(config).then(onGlobalSuccess).catch(onGlobalError);
+};
+
+const getByCreatedBy = (pageIndex, pageSize, isCompleted) => {
+  const config = {
+    method: "GET",
+    url: `${endpoint}/all?pageIndex=${pageIndex}&pageSize=${pageSize}&isCompleted=${isCompleted}`,
+    withCredentials: true,
+    crossdomain: true,
+    headers: { "Content-Type": "application/json" },
+  };
+  return axios(config).then(onGlobalSuccess).catch(onGlobalError);
+};
+
+const getAll = (pageIndex, pageSize) => {
+  const config = {
+    method: "GET",
+    url: `${endpoint}/paginate/?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    withCredentials: true,
+    crossdomain: true,
+    headers: { "Content-Type": "application/json" },
+  };
+  return axios(config).then(onGlobalSuccess).catch(onGlobalError);
+};
+
+const getById = (id) => {
+  const config = {
+    method: "GET",
+    url: `${endpoint}/${id}`,
+    withCredentials: true,
+    crossdomain: true,
+    headers: { "Content-Type": "application/json" },
+  };
+  return axios(config).then(onGlobalSuccess).catch(onGlobalError);
+};
+
+const update = (id, payload) => {
+  const config = {
+    method: "PUT",
+    url: `${endpoint}/${id}`,
+    data: payload,
+    withCredentials: true,
+    crossdoman: true,
+    headers: { "Content-Type": "application/json" },
+  };
+  return axios(config).then(onGlobalSuccess).catch(onGlobalError);
+};
+
+const updateIsCompleted = (id, payload) => {
+  const config = {
+    method: "PUT",
+    url: `${endpoint}/completed/${id}`,
+    data: payload,
+    withCredentials: true,
+    crossdoman: true,
+    headers: { "Content-Type": "application/json" },
+  };
+  return axios(config).then(onGlobalSuccess).catch(onGlobalError);
+};
+
+const deleteById = (id) => {
+  const config = {
+    method: "DELETE",
+    url: `${endpoint}/${id}`,
+    withCredentials: true,
+    crossdoman: true,
+    headers: { "Content-Type": "application/json" },
+  };
+  return axios(config).then(onGlobalSuccess).catch(onGlobalError);
+};
+
+const search = (pageIndex, pageSize, query, isCompleted) => {
+  const config = {
+    method: "GET",
+    url: `${endpoint}/search?pageIndex=${pageIndex}&pageSize=${pageSize}&query=${query}&isCompleted=${isCompleted}`,
+    withCredentials: true,
+    crossdomain: true,
+    headers: { "Content-Type": "application/json" },
+  };
+  return axios(config).then(onGlobalSuccess).catch(onGlobalError);
+};
+
+const financialGoalsService = {
+  add,
+  getByCreatedBy,
+  getAll,
+  getById,
+  update,
+  updateIsCompleted,
+  deleteById,
+  search,
+};
+export default financialGoalsService;
