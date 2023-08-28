@@ -1,0 +1,58 @@
+-- =============================================
+-- Author: JaQuan Flood
+-- Create date: 01 JUL 2023 
+-- Description: UPDATE to dbo.Goals
+-- Code Reviewer: Chris Govero
+
+-- MODIFIED BY:  JaQuan Flood
+-- MODIFIED DATE: 01 JUL 2023 
+-- Code Reviewer: Chris Govero
+-- Note: 
+-- =============================================
+ALTER PROC [dbo].[Goals_Update]
+			@Name nvarchar(75)
+			,@Description nvarchar(125) = NULL
+			,@GoalTypeId int
+			,@TargetDate datetime2(7)
+			,@UserId int
+			,@Id int
+AS
+/*
+
+
+	DECLARE
+			@Name nvarchar(75) = 'UPDATE Chris TEST'
+			,@Description nvarchar(125)='UPDATE TEST'
+			,@GoalTypeId int = 2
+			,@TargetDate datetime2(7) = '2023-08-11'
+			,@UserId int = 2
+			,@Id int = 4
+
+
+	EXECUTE dbo.Goals_Update
+			@Name 
+			,@Description 
+			,@GoalTypeId
+			,@TargetDate
+			,@UserId 
+			,@Id
+
+
+SELECT*
+	FROM dbo.Goals
+
+*/
+BEGIN
+	DECLARE @dateNow datetime2 = GETUTCDATE();
+
+UPDATE [dbo].[Goals]
+   SET [Name] = @Name
+      ,[Description] = @Description
+      ,[GoalTypeId] = @GoalTypeId
+	  ,[TargetDate] = @TargetDate
+      ,[DateModified] = @dateNow
+      ,[ModifiedBy] = @UserId
+ WHERE Id = @Id
+
+
+END
