@@ -1,0 +1,238 @@
+
+{
+    [Route("api/goals")]
+    [ApiController]
+    public class GoalApiController : BaseApiController
+    {
+        private IGoalService _service = null;
+        private IAuthenticationService<int> _authService = null;
+
+        public GoalApiController(IGoalService service
+            ,ILogger<BaseApiController> logger
+            , IAuthenticationService<int> authservice): base(logger)
+        {
+            _service = service;
+            _authService = authservice;
+
+        }
+
+        [HttpPost]
+        public ActionResult<ItemResponse<int>> Add(GoalAddRequest model)
+        {
+            ObjectResult result = null;
+
+            try
+            {
+                int userId = _authService.GetCurrentUserId();
+                int id = _service.Add(model, userId);
+
+                ItemResponse<int> response = new ItemResponse<int>() { Item = id };
+                result = Created201(response);
+            }
+            catch(Exception ex)
+            {
+                Logger.LogError(ex.ToString());
+                ErrorResponse response = new ErrorResponse(ex.Message);
+                result = StatusCode(500, response);
+            }
+          return result;
+        }
+
+        [HttpGet("{id:int}")] 
+        public ActionResult<ItemResponse<Goal>> Get(int id)
+        {
+            int iCode = 200;
+            BaseResponse response = null;
+
+            try
+            {
+                Goal goal = _service.Get(id);
+
+                if (goal == null)
+                {
+                    iCode = 404;
+                    response = new ErrorResponse("Application Resource not found");
+                }
+                else
+                {
+                    response = new ItemResponse<Goal> { Item = goal };
+                }
+            }
+
+            catch (Exception ex)
+            {
+                iCode = 500;
+                Logger.LogError(ex.ToString());
+                response = new ErrorResponse($"Generic Error: {ex.Message}");
+            }
+
+            return StatusCode(iCode, response);
+        }
+
+        [HttpGet("paginate")]
+        public ActionResult<ItemResponse<Paged<Goal>>> GetPage(int pageIndex, int pageSize)
+        {
+            int iCode = 200;
+            BaseResponse response = null;
+
+            try
+            {
+                Paged<Goal> page = _service.Get(pageIndex, pageSize);
+
+                if (page == null)
+                {
+                    iCode = 404;
+                    response = new ErrorResponse("App Resource not found.");
+                }
+                else
+                {
+                    response = new ItemResponse<Paged<Goal>> { Item = page };
+                }
+            }
+            catch (Exception ex)
+            {
+                iCode = 500;
+                response = new ErrorResponse(ex.Message);
+                Logger.LogError(ex.ToString());
+            }
+            return StatusCode(iCode, response);
+
+        }
+
+        [HttpGet("all")]
+        public ActionResult<ItemResponse<Paged<Goal>>> GetGoalsByCompletion(int pageIndex, int pageSize, bool isCompleted)
+    {
+        int iCode = 200;
+        BaseResponse response = null;
+
+        try
+        {
+                int userId = _authService.GetCurrentUserId();
+                Paged<Goal> page = _service.Get(pageIndex, pageSize, userId, isCompleted);
+
+            if (page == null)
+            {
+                iCode = 404;
+                response = new ErrorResponse("App Resource not found.");
+            }
+            else
+            {
+                response = new ItemResponse<Paged<Goal>> { Item = page };
+            }
+        }
+        catch (Exception ex)
+        {
+            iCode = 500;
+            response = new ErrorResponse(ex.Message);
+            Logger.LogError(ex.ToString());
+        }
+        return StatusCode(iCode, response);
+
+    }
+     
+
+        [HttpPut("{id:int}")]
+        public ActionResult<ItemResponse<int>> Update(GoalUpdateRequest model)
+        {
+            int code = 200;
+            BaseResponse response = null;
+
+            try
+            {
+                int userId = _authService.GetCurrentUserId();
+                _service.Update(model,userId);
+
+                response = new SuccessResponse();
+            }
+
+            catch (Exception ex)
+            {
+                code = 500;
+                response = new ErrorResponse(ex.Message);
+            }
+
+            return StatusCode(code, response);
+        }
+
+        [HttpDelete("{id:int}")]
+        public ActionResult<SuccessResponse> Delete(int id)
+        {
+            int code = 200;
+            BaseResponse response = null;
+
+            try
+            {
+                _service.Delete(id);
+
+                response = new SuccessResponse();
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                response = new ErrorResponse(ex.Message);
+
+            }
+
+            return StatusCode(code, response);
+        }
+
+        [HttpPut("completed/{id:int}")]
+        public ActionResult<SuccessResponse> UpdateIsCompleted(int id)
+        {
+            int code = 200;
+            BaseResponse response = null;
+
+            try
+            {
+                _service.UpdateIsCompleted(id);
+
+                response = new SuccessResponse();
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                response = new ErrorResponse(ex.Message);
+
+            }
+
+            return StatusCode(code, response);
+        }
+
+        [HttpGet("search")]
+        public ActionResult<ItemResponse<Paged<Goal>>> Search(int pageIndex, int pageSize, string query, bool isCompleted)
+        { 
+            int code = 200;
+            BaseResponse response = null;
+
+            try
+            {
+                int userId = _authService.GetCurrentUserId();
+                Paged<Goal> page = _service.Search(pageIndex, pageSize, query, isCompleted,userId);
+
+                if (page == null)
+                {
+                    code = 404;
+                    response = new ErrorResponse("App Resource not found.");
+                }
+                else
+                {
+                    response = new ItemResponse<Paged<Goal>> { Item = page };
+                }
+            }
+            catch (Exception ex)
+            {
+                code = 500;
+                response = new ErrorResponse(ex.Message);
+                Logger.LogError(ex.ToString());
+            }
+            return StatusCode(code, response);
+        }
+    
+
+    }
+    
+
+
+}
+    
+
