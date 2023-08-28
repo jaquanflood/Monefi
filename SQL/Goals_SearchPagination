@@ -1,0 +1,83 @@
+-- =============================================
+-- Author: JaQuan Flood
+-- Create date: 01 AUG 2023 
+-- Description: SEARCH dbo.Goals
+-- Code Reviewer: Carlos Rivera
+
+-- MODIFIED BY:  
+-- MODIFIED DATE: 
+-- Code Reviewer: 
+-- Note: 
+-- =============================================
+
+ALTER PROC [dbo].[Goals_SearchPagination] 
+				@PageIndex int
+				,@PageSize int
+				,@Query nvarchar(50)
+				,@IsCompleted bit
+				,@UserId int
+				 
+AS
+/*
+
+DECLARE 
+		@PageIndex int = 0
+		,@PageSize int = 10
+		,@Query nvarchar(50) = ''
+		,@IsCompleted bit = 0
+		,@UserId int = 140
+		
+
+		
+
+	EXECUTE dbo.Goals_SearchPagination
+		@PageIndex
+		,@PageSize
+		,@Query
+		,@IsCompleted
+		,@UserId
+		
+
+
+
+*/
+BEGIN
+
+DECLARE @offset INT = @PageIndex * @PageSize
+
+SELECT g.[Id]
+      ,g.[Name]
+      ,g.[Description]
+	  ,gt.Id AS GoalType
+	  ,gt.[Name] AS GoalType
+	  ,g.TargetDate
+	  ,g.CreatedBy
+      ,g.[DateCreated]
+      ,g.[DateModified]
+	  ,g.isCompleted
+    
+	  ,TotalCount = COUNT(1) OVER()
+       FROM [dbo].[Goals] AS g 
+	   INNER JOIN dbo.GoalTypes AS gt
+	   ON g.GoalTypeId = gt.Id
+
+	   INNER JOIN  dbo.Users AS u 
+	   ON g.CreatedBy = u.Id
+	   AND g.ModifiedBy = u.Id
+
+	   WHERE  (g.[Name] LIKE '%' + @Query + '%' OR
+         g.[Description] LIKE '%' + @Query + '%' OR
+         gt.[Name] LIKE '%' + @Query + '%')
+		 And g.CreatedBy = @UserId AND g.isCompleted = @IsCompleted
+
+
+
+	   ORDER BY g.Id DESC
+	  
+	 
+	 
+	 OFFSET @offSet Rows
+	Fetch Next @PageSize Rows ONLY
+  
+
+END
